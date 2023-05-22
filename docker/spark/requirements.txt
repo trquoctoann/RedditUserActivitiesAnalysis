@@ -1,0 +1,4 @@
+flask
+emot
+textblob
+mysql-connector-python

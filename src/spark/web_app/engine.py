@@ -5,7 +5,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import *
 from pyspark.ml.feature import StringIndexer
 from pyspark.ml.feature import CountVectorizer
-from pyspark.sql.functions import col, udf, rand, max
+from pyspark.sql.functions import col, udf, rand
 from pyspark.ml.clustering import LDA
 from pyspark.ml.feature import HashingTF, IDF
 from pyspark.ml.classification import LogisticRegression
@@ -163,6 +163,6 @@ class TopicModellingModel:
     
     def get_recommendation(self, topic):
         relevant_posts = self.final_df.filter(col('topic') == topic)
-        relevant_posts = relevant_posts.orderBy(rand()).limit(5).select('id')
+        relevant_posts = relevant_posts.orderBy(rand()).limit(5).select('id', 'topic')
         recommendation = relevant_posts.join(self.data, relevant_posts.id == self.data.id, "inner").drop(relevant_posts.id)
         return recommendation

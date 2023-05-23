@@ -1,4 +1,9 @@
 import nltk
+import requests
+import configparser
+import urllib3
+import datetime
+import mysql.connector
 from emot.emo_unicode import UNICODE_EMOJI
 from emot.emo_unicode import EMOTICONS_EMO
 from nltk.stem import WordNetLemmatizer
@@ -6,8 +11,12 @@ from pyspark.sql.types import StringType, ArrayType
 from pyspark.ml.feature import RegexTokenizer
 from pyspark.ml.feature import StopWordsRemover
 from pyspark.sql.functions import col, udf
+from pyspark.sql import functions
 
 nltk.download('wordnet')
+configFilePath = 'project.conf'
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 def delete_numbers(df, column_name):
     remove_numbers_udf = udf(lambda text: ''.join([c for c in text if not c.isdigit()]), StringType())
     df = df.withColumn(column_name, remove_numbers_udf(col(column_name)))
@@ -69,15 +78,6 @@ def preprocessing(df, column_name):
     df = remove_stopword(df)
     return df
 
-import requests
-import configparser
-import urllib3
-import datetime
-import mysql.connector
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-configFilePath = 'project.conf'
-
 # create the authentication header to query 
 def get_reddit_bearer_token():
     # get spotify api info
@@ -111,3 +111,24 @@ def send_request_reddit_get_new_post(url, access_token = get_reddit_bearer_token
         print("Error Response Code: " + str(response.status_code))
         raise Exception(response.status_code, response.text)
     return response.json(), response.status_code
+
+def get_subtopic_top_word(topic_engine): 
+    vocabulary = topic_engine.vectorizer.vocabulary
+
+    topics = topic_engine.model.describeTopics().collect()
+    topics_words = []
+
+    for topic in topics:
+        topic_id = topic['topic']
+        topic_words_indices = topic['termIndices']
+        word_probabilities = topic['termWeights']
+
+        topic_words = [vocabulary[idx] for idx in topic_words_indices]
+        topics_words.append(topic_words)
+    return topics_words
+    
+def get_most_popular_topic(grouped, label_topic):
+    max_count = grouped.agg(functions.max("count")).first()[0]
+    highest_count_groups = grouped.filter(col('count') == max_count)
+    label_topic_name = highest_count_groups.select(label_topic).first()[0]
+    return label_topic_name

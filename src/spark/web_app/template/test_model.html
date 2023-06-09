@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Classification Model</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1fdff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 4rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.2);
+            width: 800px;
+            max-width: 90%;
+        }
+        
+        h1 {
+            text-align: center;
+            text-decoration: underline;
+        }
+        
+        .input-block {
+            display: flex;
+        }
+        
+        input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .submit-button {
+            margin-left: 1rem;
+            padding: 0.5rem;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .result-block {
+            background-color: #f9f9f9;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+        
+        a.home-link {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: black;
+            font-size: 1.2rem;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Classification Model</h1>
+        <form action="{{ url_for('test') }}" method="POST">
+            <div class="input-block">
+                <input type="text" name="inputValue" placeholder="Enter a sentence">
+                <button class="submit-button">Predict</button>
+            </div>
+        </form>
+        <div class="result-block" id="result">
+            Label: {{result}}
+        </div>
+        <a href="{{ url_for('home') }}" class="home-link">Home</a>
+    </div>
+</body>
+</html>

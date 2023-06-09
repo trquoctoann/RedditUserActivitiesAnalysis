@@ -46,10 +46,10 @@ class TextClassificationEngine:
     
     def __vectorize_data(self):
         logger.info("Vectorize data...")
-        hashing_tf = HashingTF(inputCol = "filtered", outputCol = "raw_features", numFeatures=10000)
+        hashing_tf = HashingTF(inputCol = "filtered", outputCol = "raw_features")
         featurized_data = hashing_tf.transform(self.preprocessed_data)
 
-        idf = IDF(inputCol = "raw_features", outputCol = "features")
+        idf = IDF(inputCol = "raw_features", outputCol = "features", minDocFreq = 100)
         idf_vectorizer = idf.fit(featurized_data)
         rescaled_data = idf_vectorizer.transform(featurized_data)
         logger.info("Vectorization completed")
@@ -59,18 +59,14 @@ class TextClassificationEngine:
         labelEncoder = StringIndexer(inputCol = 'category',outputCol = 'label').fit(self.rescaled_data)
         df = labelEncoder.transform(self.rescaled_data)
         
-        family = 'multinomial'
-        regParam = 0.3
+        regParam = 0.1
         elasticNetParam = 0
-        maxIter = 50
         
         logger.info("Training text classification model...")
         lr = LogisticRegression(featuresCol = 'features',
                                 labelCol = 'label',
-                                family = family,
                                 regParam = regParam,
-                                elasticNetParam = regParam,
-                                maxIter = maxIter)
+                                elasticNetParam = regParam)
         model = lr.fit(df)
         logger.info("Text classification model built!")
         return model
@@ -94,15 +90,14 @@ class TextClassificationEngine:
         predictions = predictions.withColumn('label_name', get_label_udf(col('prediction')))
         return predictions.select('post_id', 'descriptions', 'label_name')
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+    
 class TopicModellingModel:
     
-    def __init__(self, spark, label_name):
+    def __init__(self, spark, label_name, k):
         logger.info("Starting up model LDA Business: ")
         self.spark = spark
         self.label_name = label_name
+        self.k = k
         self.data = self.__load_data_from_database()
         self.preprocessed_data = self.__data_preprocessing()
         self.vectorizer, self.wordVectors = self.__vectorize_data()
@@ -136,10 +131,9 @@ class TopicModellingModel:
         return vectorizer, wordVectors_business
 
     def __train_model(self):
-        k = 5
-        maxIter = 50
+        maxIter = 100
         seed = 2
-        lda = LDA(k = k, maxIter = maxIter, featuresCol = 'features', seed = seed)
+        lda = LDA(k = self.k, maxIter = maxIter, featuresCol = 'features', seed = seed)
         ldaModel = lda.fit(self.wordVectors)
         final_df = ldaModel.transform(self.wordVectors)
 

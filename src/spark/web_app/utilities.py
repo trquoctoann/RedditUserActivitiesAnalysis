@@ -4,6 +4,10 @@ import configparser
 import urllib3
 import datetime
 import mysql.connector
+import os
+import re
+from bs4 import BeautifulSoup, SoupStrainer
+from urllib.parse import urljoin, urlsplit
 from emot.emo_unicode import UNICODE_EMOJI
 from emot.emo_unicode import EMOTICONS_EMO
 from nltk.stem import WordNetLemmatizer
@@ -132,3 +136,16 @@ def get_most_popular_topic(grouped, label_topic):
     highest_count_groups = grouped.filter(col('count') == max_count)
     label_topic_name = highest_count_groups.select(label_topic).first()[0]
     return label_topic_name
+
+def get_background_image(url):
+    html = requests.get(url).text
+    soup = BeautifulSoup(html, "html5lib")
+    image_link = None
+    for tag in soup.find_all():
+        for attr in tag.attrs.values():
+            if isinstance(attr, str) and re.match(r'^https?://\S+\.(?:jpg|jpeg|png|gif)(?:\?.*)?$', attr):
+                image_link = attr
+                break
+        if image_link:
+            break
+    return image_link

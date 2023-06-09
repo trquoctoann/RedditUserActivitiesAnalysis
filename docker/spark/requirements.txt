@@ -2,3 +2,5 @@ flask
 emot
 textblob
 mysql-connector-python
+bs4
+html5lib
